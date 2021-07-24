@@ -1,0 +1,11 @@
+
+.DS_Store
+.vscode
+
+__pycache__
+*.egg-info
+
+src/train
+src/plot.py
+*.png
+*.txt
