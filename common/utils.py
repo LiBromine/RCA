@@ -35,7 +35,7 @@ def load_single_csv(path, filename):
     return record
 
 
-def load_kpis_from_csv(path, cnt=5):
+def load_kpis_from_csv(path, cnt=2):
     '''return a dict kpi data'''
     file_list = os.listdir(path)
     data = {}
