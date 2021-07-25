@@ -8,6 +8,10 @@ def parse_args():
         help='The lower bound for the difference of failure time and change start time')
     parser.add_argument('--w2', type=int, default=3600,
         help='The interval for sampling normal points before change start time')
+    parser.add_argument('--j-window', type=int, default=6,
+        help='TODO')
+    parser.add_argument('--ananomly-th', type=int, default=5,
+        help='TODO')
     parser.add_argument('--seed', type=int, default=0,
         help='Random seed')
 

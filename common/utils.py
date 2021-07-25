@@ -38,13 +38,18 @@ def load_single_csv(path, filename):
 def load_kpis_from_csv(path, cnt=2):
     '''return a dict kpi data'''
     file_list = os.listdir(path)
+    # file_list = [
+    #     'Tomcat02##OSLinux-CPU_CPU-1_SingleCpuidle.csv',
+    #     'Tomcat04##OSLinux-OSLinux_NETWORK_NETWORK_TCP-FIN-WAIT.csv',
+    # ]
     data = {}
     if cnt < 0:
         cnt = len(file_list)
     for filename in file_list[0:cnt]:
         print(filename)
         record = load_single_csv(path, filename)
-        data[record['kpi_name']] = record
+        key = record['cmdb_id'] + '##' + record['kpi_name']
+        data[key] = record
     return data
 
 
@@ -65,3 +70,7 @@ def get_anomaly(start_time, degree):
         'start_time': start_time,
         'degree': degree,
     }
+
+
+def get_diff(a):
+    return a[1:] - a[:-1]
