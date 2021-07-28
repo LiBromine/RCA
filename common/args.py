@@ -4,6 +4,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     # Configuration and Parameters
+    # for abs_dev
     parser.add_argument('--w1', type=int, default=1800,
         help='The lower bound for the difference of failure time and change start time')
     parser.add_argument('--w2', type=int, default=3600,
@@ -12,6 +13,12 @@ def parse_args():
         help='TODO')
     parser.add_argument('--ananomly-th', type=int, default=5,
         help='TODO')
+    # for page rank
+    parser.add_argument('--pr-alpha', type=float, default=0.85,
+        help='non-teleport proba for pagerank')
+    parser.add_argument('--pr-eps', type=float, default=1e-3,
+        help='convergence constant for pagerank')
+        
     parser.add_argument('--seed', type=int, default=0,
         help='Random seed')
 

@@ -84,9 +84,9 @@ def anomaly_detection(fail_time, kpi, args):
     # 2. get change start time
     start_time = abs_dev(sampled_time, sampled_val)
     if start_time is None or start_time > fail_time:
-        print('No start time or late start time')
+        # print('No start time or late start time')
         return None, None, False
-    print('Start Time is {0}'.format(start_time))
+    # print('Start Time is {0}'.format(start_time))
 
     # 3. get change degree
     normal_window_lb = start_time - args.w2
@@ -101,7 +101,7 @@ def anomaly_detection(fail_time, kpi, args):
     degree = guassian_degree(normal_val, query_val)
     
     # 4. compare with a threshold to decide if it is a ananomly KPI
-    print(start_time, degree)
+    # print(start_time, degree)
     if max(degree) < args.ananomly_th:
         return None, None, False
     
