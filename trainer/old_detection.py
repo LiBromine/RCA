@@ -65,7 +65,7 @@ def kde_guassian_degree(normal_val, query_val):
     return degree
 
 
-def anomaly_detection(fail_time, kpi, args):
+def system_anomaly_detection(fail_time, kpi, args):
 
     # 1. extract a data series 
     # start_time = absolute_derivative(fail_time, args.w1, kpi)
@@ -106,3 +106,7 @@ def anomaly_detection(fail_time, kpi, args):
         return None, None, False
     
     return start_time, degree, True
+
+
+def service_anomaly_detection(fail_time, timestamps, mrts):
+    pass

@@ -3,52 +3,76 @@ import numpy as np
 import pandas as pd
 from common.args import parse_args
 from common.utils import *
-from trainer.detection import anomaly_detection
+from detection.detector import system_anomaly_detection, service_anomaly_detection
+# from trainer.detection import system_anomaly_detection
 from builder.pc import pc, gauss_ci_test
 from ranker.probablistic import page_rank
 
 def load_data(args):
     '''
-    data format: 
-        times: [timestamp0, timestamp1];
-        kpis: {
+    return data format: 
+        injection_times: [timestamp0, timestamp1];
+        system_kpis: {
             kpi_id: {
                 'kpi_name': xxx,
                 'cmdb_id': xxx,
-                'timestamp': [xx, xx, ..., xx],
-                'value': [xx, xx, ..., xx],
+                'times': [xx, xx, ..., xx],
+                'values': [xx, xx, ..., xx],
             },
             ...
         }
+        service_mrt_data: [
+            {
+                'times': [],
+                'mrts': [],
+            }, ...
+        ]
     '''
     print("Data Load Begin.")
-    data_kpis = load_kpis_from_csv(args.data_folder, cnt=-1)
-    data_times = load_times_from_csv(args.injection_times)
+    system_kpis = load_system_kpis_from_csv(args.data_folder, cnt=2)
+    injection_times = load_times_from_csv(args.injection_times)
+    service_mrt_data = load_service_kpis(args.service_kpi)
     print("Data Load Complete!")
-    return data_kpis, data_times    
+    return system_kpis, injection_times, service_mrt_data
 
 
 def main_worker(args):
     # init
-    data_kpis, data_times = load_data(args) 
+    system_kpis, injection_times, service_mrt_data = load_data(args)
 
     # worker
-    for injection_time in data_times:
+    for injection_time in injection_times:
 
-        # anomaly detection
+        # 0. anomaly detection
         print('{1} {0} Begin {1}'.format(injection_time, '-'*20))
-        anomaly_kpis = {}
-        for kpi_id in data_kpis:
-            kpi = data_kpis[kpi_id]
-            start_time, degree, is_anomaly = anomaly_detection(injection_time, kpi, args)
-            if is_anomaly:
-                anomaly_kpis[kpi_id] = get_anomaly(start_time, degree)
-                print('{0} Begin'.format(kpi_id))
-        print('At this time, the number of ananomly is {0}'.format(len(anomaly_kpis)))
-            
-        # causal graph learning
+        anomaly_system_kpis = {}
+        for kpi_id in system_kpis:
+            kpi = system_kpis[kpi_id]
+            anamalous, degree = system_anomaly_detection(fail_time=injection_time, kpi=kpi, args=args)
+            if anamalous:
+                anomaly_system_kpis[kpi_id] = degree
+                print('{0}: {1}'.format(kpi_id, degree))
+        print('At this time, the number of system ananomly is {0}'.format(len(anomaly_system_kpis)))
+
+        anomaly_service_kpis = {}
+        for index, data in enumerate(service_mrt_data):
+            anamalous, degree = service_anomaly_detection(fail_time=injection_time, mrts=data["mrts"], timestamps=data["times"], args=args)
+            if anamalous:
+                anomaly_service_kpis[index] = degree
+                print('ServiceTest {0}: {1}'.format(index, degree))
+        print('At this time, the number of service ananomly is {0}'.format(len(anomaly_service_kpis)))
+        return
+
+        # 0.1 augment the data
+        # TODO
+
+
+        # 1. causal graph learning
         # TODO, completely unsolved 
-        data = []
+        labels = anomaly_kpis.keys()
+        for kpi_id in anomaly_kpis:
+            pass
+
         row_count = sum(1 for row in data)
         cg = pc(
             suffStat = {"C": data.corr().values, "n": data.values.shape[0]},
@@ -58,7 +82,7 @@ def main_worker(args):
             verbose = True
         )
 
-        # ranking
+        # 2. ranking
         # TODO, to construct transition matrix
         P = []
         output_vec = page_rank(P, args.pr_alpha, args.pr_eps, init=-1)  
