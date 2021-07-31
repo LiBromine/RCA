@@ -20,7 +20,7 @@ def anomaly_detection(method, config, testing_values, init_values=None):
         # now we do not introduce the notion of 'starting time'
         anomalous = (len(result['alarms']) > 0)
         if anomalous:
-            print(result['degree'])
+            print(result['degree']) # debug
             degree = max(np.abs(result['degree']))
             return anomalous, degree
         else:
@@ -61,7 +61,6 @@ def service_anomaly_detection(fail_time, mrts, timestamps, args):
     testing_values = mrts[(testing_start_time <= timestamps) & (timestamps <= fail_time)] # intercept
     if len(testing_values) <= 1:
         return no_anomaly()
-    # print(testing_values)
 
     # 2. detect and get degree
     config = {

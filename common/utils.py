@@ -15,22 +15,19 @@ def load_single_csv(path, filename):
         spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
         for index, row in enumerate(spamreader):
             if index > 0:
-                # timestamp.append(int(row[1]))
-                # value.append(float(row[4]))
                 time_and_val.append((int(row[1]), float(row[4])))
             if index == 1:
                 kpi_name = row[3]
                 cmdb_id = row[2]
     time_and_val = sorted(time_and_val)
     for item in time_and_val:
-        timestamp.append(item[0])
-        value.append(item[1])
+        timestamp.append(item[0]) # time
+        value.append(item[1]) # value
     record = {
         'kpi_name': kpi_name,
         'cmdb_id': cmdb_id,
         'times': np.array(timestamp),
         'values': np.array(value),
-        # 'time_and_val': time_and_val,
     }
     return record
 
@@ -68,12 +65,6 @@ def load_service_kpis(filename):
             "mrts": np.array(mrts),
         }
 
-    # row = 0
-    # for rank in range(max_rank):
-    #     row += len(val_list[rank]["time"])
-    #     print(len(val_list[rank]["time"]))
-    #     print(len(val_list[rank]["mrt"]))
-    # print('--- row : {}'.format(row))
     return val_list
 
 

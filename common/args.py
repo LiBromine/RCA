@@ -7,12 +7,12 @@ def parse_args():
     # for anomaly detection
     parser.add_argument('--w1', type=int, default=1800,
         help='Windows for testing/detecting before the injection time.')
-    parser.add_argument('--w2', type=int, default=3600,
-        help='The interval for sampling normal points before change start time')
-    parser.add_argument('--j-window', type=int, default=6,
-        help='TODO')
-    parser.add_argument('--ananomly-th', type=int, default=5,
-        help='TODO')
+    # parser.add_argument('--w2', type=int, default=3600,
+    #     help='The interval for sampling normal points before change start time')
+    # parser.add_argument('--j-window', type=int, default=6,
+    #     help='')
+    # parser.add_argument('--ananomly-th', type=int, default=5,
+    #     help='')
     parser.add_argument('--ad-method', type=str, choices=['abs', 'mad', 'spot'], default='abs',
         help='Method of anomaly detection')
     # for page rank

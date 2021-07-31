@@ -6,7 +6,7 @@ from scipy.stats import norm
 
 class Dev:
     """
-    TODO
+    A anomaly detection object based on deviation
     """
     def __init__(self, method='abs'):
         """
@@ -67,10 +67,12 @@ class Dev:
         sigma = max(np.std(s), sigma_min)
         alarms = []
         degree = []
+        record = [] # for log and check error
         for i, val in enumerate(s):
             if (abs(val - mu) >= k * sigma):
                 alarms.append(i)
                 degree.append(val)
+            record.append(val)
 
         return {'degree': degree, 'alarms': alarms}
 
@@ -93,7 +95,7 @@ class Dev:
         sigma = max(np.std(abs_diff), sigma_min)
         alarms = []
         degree = []
-        record = []
+        record = [] # for log and check error
         max_dev_index = -1
         for i, diff in enumerate(abs_diff):
             
