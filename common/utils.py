@@ -1,7 +1,7 @@
 import numpy as np
-import pickle
 import os
 import csv
+import tqdm
 
 def load_single_csv(path, filename):
     filename = os.path.join(path, filename)
@@ -62,7 +62,7 @@ def load_service_kpis(filename):
             mrts.append(pair[1]) # mrt value
         val_list[rank] = {
             "times": np.array(timestamps),
-            "mrts": np.array(mrts),
+            "values": np.array(mrts),
         }
 
     return val_list
@@ -88,7 +88,7 @@ def load_system_kpis_from_csv(path, cnt=2):
     data = {}
     if cnt < 0:
         cnt = len(file_list)
-    for filename in file_list[0:cnt]:
+    for filename in tqdm.tqdm(file_list[0:cnt]):
         print(filename)
         record = load_single_csv(path, filename)
         key = record['cmdb_id'] + '##' + record['kpi_name']
@@ -116,3 +116,108 @@ def get_anomaly(start_time, degree):
 
 def get_diff(a):
     return a[1:] - a[:-1]
+
+
+def merge_system_and_service_kpis(timestamp, window_size, system_kpi_dict, query_system_kpis, service_kpi_dict, query_service_kpis):
+    """
+    Params:
+        timestamp: a query timestamp
+        window_size: sampled data number
+        system_kpi_dict: a dict data containing all system kpis
+        query_system_kpis: some system kpis which are desired to be merged
+        service_kpi_dict: a list/dict data containing all list kpis
+        query_service_kpis: some service kpis which are desired to be merged
+    =============
+    Returns:
+        data: a pandas dataframe containing all merged data
+    """
+
+    query_service_list = list(query_service_kpis.keys())
+    if len(query_service_list) == 0:
+        only_system_kpis = True
+    else: 
+        only_system_kpis = False
+    query_system_list = list(query_system_kpis.keys())
+    query_list = query_service_list + query_system_list
+
+    anchor_key = query_list[0]
+    print("Anchor key: {0}".format(anchor_key))
+    if not only_system_kpis:
+        anchor = service_kpi_dict[anchor_key]
+    else:
+        anchor = system_kpi_dict[anchor_key]
+    anchor_times = anchor["times"]
+
+    interval = 60
+    ret_data = []
+    hot_index = 0
+    legal_points_num = 0
+    loop_exec_num = 0
+    while(True):
+        if legal_points_num >= window_size:
+            break
+        if hot_index >= len(anchor_times) or hot_index < 0:
+            print("[WARN] Anchor times exhasuted..., has {0} legal data points, stop loop.".format(len(ret_data)))
+            break
+
+        loop_exec_num += 1
+        hot_time = anchor_times[hot_index]
+        is_legal = True
+        for key in query_list: # check whether the data of this time point exist in all metrics
+            if key in query_service_list:
+                data = service_kpi_dict[key]
+            else:
+                data = system_kpi_dict[key]
+            # Initially, we want to the time matched precisely, but it is unfeasible
+            # Therefore, we take an approximate strategy using 'data_slice'
+            data_slice = data["times"][((hot_time - interval) <= data["times"]) & (data["times"] <= hot_time)]
+            if data_slice.size == 0:
+                print("hot_time {0} does not exist in the data slice of key: {1}".format(hot_time, key))
+                is_legal = False
+                hot_index += 1
+                break
+        if not is_legal:
+            continue
+        
+        one_time_data = []
+        for key in query_list:
+            if key in query_service_list:
+                data = service_kpi_dict[key]
+            else:
+                data = system_kpi_dict[key]
+            elem = data["values"][((hot_time - interval) <= data["times"]) & (data["times"] <= hot_time)]
+            one_time_data.append(elem[-1]) # approximate the target value using the value in nearest time 
+        assert(len(one_time_data) == len(query_list))
+        ret_data.append(one_time_data)
+        legal_points_num += 1
+
+        
+    ret_data = np.array(ret_data)
+    import pandas as pd
+    return pd.DataFrame(ret_data, columns=query_list)
+
+
+def pearson_corr(data, eps=1e-3):
+    """
+    Params:
+        data: np.ndarray: (n, k), n is sample number, k is class number
+        eps: avoid zero sigma
+    =============
+    Returns:
+        C: np.ndarray: (k, k)
+    """
+    data = data.T
+    k = data.shape[0]
+    cov = np.cov(data)
+    std = np.std(data, axis=-1)
+
+    # print(data)
+    # print(cov)
+    # print(std)
+    corr = np.zeros((k, k))
+    for i in range(k):
+        for j in range(k):
+            corr[i, j] = cov[i, j] / ((std[i] + eps) * (std[j] + eps))
+    for i in range(k):
+        corr[i, i] = 1.0 
+    return corr

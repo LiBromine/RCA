@@ -20,7 +20,7 @@ def anomaly_detection(method, config, testing_values, init_values=None):
         # now we do not introduce the notion of 'starting time'
         anomalous = (len(result['alarms']) > 0)
         if anomalous:
-            print(result['degree']) # debug
+            # print(result['degree']) # debug
             degree = max(np.abs(result['degree']))
             return anomalous, degree
         else:

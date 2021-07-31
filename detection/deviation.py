@@ -48,7 +48,7 @@ class Dev:
             raise NotImplementedError
     
     @staticmethod
-    def _mad(series, sigma_min=1e-4, k=3):
+    def _mad(series, sigma_min=1e-4, MAD_min=1e-3, k=3):
         """
         Params:
         series: time series: np.ndarray
@@ -61,10 +61,10 @@ class Dev:
         """
         median = np.median(series)
         abs_diff = np.abs(series - median)
-        MAD = max(np.median(abs_diff), sigma_min)
+        MAD = np.median(abs_diff) + MAD_min
         s = (series - median) / MAD
         mu = np.mean(s)
-        sigma = max(np.std(s), sigma_min)
+        sigma = np.std(s) + sigma_min
         alarms = []
         degree = []
         record = [] # for log and check error
@@ -92,7 +92,7 @@ class Dev:
         newer_data = series[1:]
         abs_diff = np.abs(newer_data - early_data)
         mu = np.mean(abs_diff)
-        sigma = max(np.std(abs_diff), sigma_min)
+        sigma = np.std(abs_diff) + sigma_min
         alarms = []
         degree = []
         record = [] # for log and check error
