@@ -18,9 +18,9 @@ def parse_args():
     # for pc
     parser.add_argument('--pc-window', type=int, default=5000,
         help='Sampled number to init the casual graph')
-    parser.add_argument('--pc-system-candidate', type=int, default=15,
+    parser.add_argument('--pc-system-candidate', type=int, default=20,
         help='System kpis number(nodes) to init the casual graph')
-    parser.add_argument('--pc-service-candidate', type=int, default=3,
+    parser.add_argument('--pc-service-candidate', type=int, default=1,
         help='Service kpis number(nodes) to init the casual graph')
     # for page rank
     parser.add_argument('--pr-alpha', type=float, default=0.85,

@@ -14,8 +14,6 @@ def system_detect(injection_time, system_kpis, args):
         anamalous, degree = system_anomaly_detection(fail_time=injection_time, kpi=kpi, args=args)
         if anamalous:
             anomaly_system_kpis[kpi_id] = degree
-            # print('{0}: {1}'.format(kpi_id, degree))
-    # print('[INFO] At this time, the number of system ananomly is {0}'.format(len(anomaly_system_kpis)))
 
     unsorted_list = []
     for key in anomaly_system_kpis:
@@ -37,8 +35,6 @@ def service_detect(injection_time, service_mrt_data, args):
         anamalous, degree = service_anomaly_detection(fail_time=injection_time, mrts=data["values"], timestamps=data["times"], args=args)
         if anamalous:
             anomaly_service_kpis[index] = degree
-            # print('ServiceTest {0}: {1}'.format(index, degree))
-    # print('[INFO] At this time, the number of service ananomly is {0}'.format(len(anomaly_service_kpis)))
     
     unsorted_list = []
     for key in anomaly_service_kpis:
@@ -108,7 +104,7 @@ def main_worker(args):
         
         # 0.1 augment the data
         print('{0} Data augmentation Start {0}'.format('-'*10))
-        data = merge_system_and_service_kpis(
+        data, query_list = merge_system_and_service_kpis(
             timestamp=injection_time,
             window_size=args.pc_window,
             system_kpi_dict=system_kpis,
@@ -121,9 +117,6 @@ def main_worker(args):
         # 1. causal graph learning
         print('{0} Causal graph learning Start {0}'.format('-'*10))
         row_count = sum(1 for row in data)
-        # print(data.info())
-        # print("C: ", pearson_corr(data.values))
-        # print("n: ", data.values.shape)
         corr = pearson_corr(data.values)
         cg = pc(
             suffStat={"C": corr, "n": data.values.shape[0]},

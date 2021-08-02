@@ -150,18 +150,25 @@ def merge_system_and_service_kpis(timestamp, window_size, system_kpi_dict, query
 
     interval = 60
     ret_data = []
-    hot_index = 0
+    # hot_index = 0
+    lb = timestamp - interval * 40
+    ub = timestamp + interval * 10
+    hot_time = lb - interval
     legal_points_num = 0
     loop_exec_num = 0
     while(True):
-        if legal_points_num >= window_size:
-            break
-        if hot_index >= len(anchor_times) or hot_index < 0:
-            print("[WARN] Anchor times exhasuted..., has {0} legal data points, stop loop.".format(len(ret_data)))
+        # if legal_points_num >= window_size:
+        #     break
+        # if hot_index >= len(anchor_times) or hot_index < 0:
+        #     print("[WARN] Anchor times exhasuted..., has {0} legal data points, stop loop.".format(len(ret_data)))
+        #     break
+        hot_time += interval
+        if hot_time > ub:
             break
 
         loop_exec_num += 1
-        hot_time = anchor_times[hot_index]
+        # hot_time = anchor_times[hot_index]
+        # hot_index += 1
         is_legal = True
         for key in query_list: # check whether the data of this time point exist in all metrics
             if key in query_service_list:
@@ -170,11 +177,10 @@ def merge_system_and_service_kpis(timestamp, window_size, system_kpi_dict, query
                 data = system_kpi_dict[key]
             # Initially, we want to the time matched precisely, but it is unfeasible
             # Therefore, we take an approximate strategy using 'data_slice'
-            data_slice = data["times"][((hot_time - interval) <= data["times"]) & (data["times"] <= hot_time)]
+            data_slice = data["times"][((hot_time - 2 * interval) <= data["times"]) & (data["times"] <= hot_time)]
             if data_slice.size == 0:
                 print("hot_time {0} does not exist in the data slice of key: {1}".format(hot_time, key))
                 is_legal = False
-                hot_index += 1
                 break
         if not is_legal:
             continue
@@ -185,7 +191,7 @@ def merge_system_and_service_kpis(timestamp, window_size, system_kpi_dict, query
                 data = service_kpi_dict[key]
             else:
                 data = system_kpi_dict[key]
-            elem = data["values"][((hot_time - interval) <= data["times"]) & (data["times"] <= hot_time)]
+            elem = data["values"][((hot_time - 2 * interval) <= data["times"]) & (data["times"] <= hot_time)]
             one_time_data.append(elem[-1]) # approximate the target value using the value in nearest time 
         assert(len(one_time_data) == len(query_list))
         ret_data.append(one_time_data)
@@ -194,7 +200,7 @@ def merge_system_and_service_kpis(timestamp, window_size, system_kpi_dict, query
         
     ret_data = np.array(ret_data)
     import pandas as pd
-    return pd.DataFrame(ret_data, columns=query_list)
+    return pd.DataFrame(ret_data, columns=query_list), query_list
 
 
 def pearson_corr(data, eps=1e-3):
@@ -217,7 +223,12 @@ def pearson_corr(data, eps=1e-3):
     corr = np.zeros((k, k))
     for i in range(k):
         for j in range(k):
-            corr[i, j] = cov[i, j] / ((std[i] + eps) * (std[j] + eps))
+            if std[i] == 0 or std[j] == 0:
+                corr[i, j] = 0
+            else:
+                corr[i, j] = cov[i, j] / ((std[i]) * (std[j]))
+            # print(i, j, cov[i, j], std[i], std[j], corr[i, j])
+            corr[i, j] = np.clip(corr[i, j], -0.9999, 0.9999)
     for i in range(k):
         corr[i, i] = 1.0 
     return corr
