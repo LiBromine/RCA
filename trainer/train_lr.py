@@ -147,9 +147,18 @@ def main_worker(args):
         target_entity = entity_result[idx]
         rank_id = []
         rank_score = []
+
+        # redetect
+        anomaly_system_kpis = system_detect(
+            injection_time=injection_time,
+            system_kpis=system_kpis,
+            args=args,
+        )
+
         for kpi_id in anomaly_system_kpis:
             cmdb_id, _ = decomposition(kpi_id)
             if cmdb_id == target_entity:
+                print(kpi_id)
                 rank_id.append(kpi_id)
                 rank_score.append(anomaly_system_kpis[kpi_id])
         result = gen_json_result(injection_time, rank_id, rank_score)

@@ -229,6 +229,8 @@ def pearson_corr(data, eps=1e-3):
     """
     data = data.T
     k = data.shape[0]
+    if k == 1:
+        return np.ones((1, 1))
     cov = np.cov(data)
     std = np.std(data, axis=-1)
 
