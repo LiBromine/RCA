@@ -85,6 +85,7 @@ def load_system_kpis_from_csv(path, cnt=2):
     #     'Tomcat04##OSLinux-OSLinux_NETWORK_NETWORK_TCP-FIN-WAIT.csv',
     # ]
     # ===
+    file_list = list(filter(lambda x : x[0] != 'd', file_list))
     data = {}
     if cnt < 0:
         cnt = len(file_list)

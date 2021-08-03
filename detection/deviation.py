@@ -20,7 +20,7 @@ class Dev:
 	    ----------
     	abs_dev/median abs_dev object
         """
-        methods = ['abs', 'median']
+        methods = ['abs', 'mad']
         if method in methods:
             self.method = method
         else:
@@ -113,7 +113,7 @@ class Dev:
         if self.method == 'abs':
             return self._abs_dev(self.data, sigma_min=sigma_min, k=k)
         elif self.method == 'mad':
-            return self._abs_dev(self.data, sigma_min=sigma_min, k=k)
+            return self._mad(self.data, sigma_min=sigma_min, k=k)
         else:
             raise NotImplementedError
 
