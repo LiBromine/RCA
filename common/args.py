@@ -31,6 +31,9 @@ def parse_args():
 
     parser.add_argument('--seed', type=int, default=0,
         help='Random seed')
+    # for logistic regression
+    parser.add_argument('--train-size', type=int, default=30,
+        help='Traing set size in all cases')
 
     # Log and Output
     parser.add_argument('--exp-name', type=str, default=None,
@@ -41,6 +44,8 @@ def parse_args():
         help='Training system kpi data folder')
     parser.add_argument('--injection-times', type=str, default='../../aiops-2021/ground_truth/injection_times.csv',
         help='Injection time input')
+    parser.add_argument('--ground-truth', type=str, default='../../aiops-2021/ground_truth/answer.json',
+        help='Ground Truth')
     parser.add_argument('--service-kpi', type=str, default='../../aiops-2021/data/service_kpi.csv',
         help='Training service kpi data folder')
 

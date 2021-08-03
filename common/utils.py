@@ -108,6 +108,20 @@ def load_times_from_csv(filename):
     return np.array(timestamp)
 
 
+def load_labels(filename):
+    import json
+    l = json.load(open(filename))
+    ret = {}
+    for one_injection in l:
+        time = one_injection[0]
+        kpis = one_injection[1]
+        entity = kpis[0][0]
+        ret[time] = {
+            'entity': entity
+        }
+    return ret
+
+
 def get_anomaly(start_time, degree):
     return {
         'start_time': start_time,
@@ -250,10 +264,19 @@ def gen_json_result(injection_time, rank_id, rank_score):
     l = sorted(l)
     l.reverse()
 
-    print(l)
     id_list = []
     for _, kpi_id in l:
         cmdb_id, kpi_name = decomposition(kpi_id)
         id_list.append([cmdb_id, kpi_name])
 
     return [int(injection_time), id_list]
+
+
+def get_entity_list():
+    return ['apache01', 'apache02', 
+            'IG01', 'IG02',
+            'MG01', 'MG02',
+            'Mysql01', 'Mysql02',
+            'Redis01', 'Redis02',
+            'Tomcat01', 'Tomcat02', 'Tomcat03', 'Tomcat04'
+            ]
