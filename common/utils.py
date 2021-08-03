@@ -232,3 +232,27 @@ def pearson_corr(data, eps=1e-3):
     for i in range(k):
         corr[i, i] = 1.0 
     return corr
+
+
+def decomposition(kpi_id):
+    l = kpi_id.split('##')
+    cmdb_id = l[0]
+    kpi_name = l[1]
+    return cmdb_id, kpi_name
+
+
+def gen_json_result(injection_time, rank_id, rank_score):
+    l = []
+    assert len(rank_id) == len(rank_score)
+    for i in range(len(rank_id)):
+        l.append((rank_score[i], rank_id[i]))
+    l = sorted(l)
+    l.reverse()
+
+    print(l)
+    id_list = []
+    for _, kpi_id in l:
+        cmdb_id, kpi_name = decomposition(kpi_id)
+        id_list.append([cmdb_id, kpi_name])
+
+    return [int(injection_time), id_list]

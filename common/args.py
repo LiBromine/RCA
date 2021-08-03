@@ -27,15 +27,14 @@ def parse_args():
         help='non-teleport proba for pagerank')
     parser.add_argument('--pr-eps', type=float, default=1e-3,
         help='convergence constant for pagerank')
+    parser.add_argument('--rank-gamma', type=float, default=0.2)
 
     parser.add_argument('--seed', type=int, default=0,
         help='Random seed')
 
     # Log and Output
-    parser.add_argument('--train_dir', type=str, default='./train',
-        help='Training directory for saving model. Default: ./train')
-    parser.add_argument('--continue_train', type=int, default=0,
-        help='Do or not continue to train')
+    parser.add_argument('--exp-name', type=str, default=None,
+        help='save file')
 
     # Data
     parser.add_argument('--data-folder', type=str, default='../../aiops-2021/data/system_kpis',

@@ -1,11 +1,12 @@
 import os
 import numpy as np
 import pandas as pd
+import json
 from common.args import parse_args
 from common.utils import *
 from detection.detector import system_anomaly_detection, service_anomaly_detection
 from builder.pc import pc, gauss_ci_test
-from ranker.probablistic import page_rank
+from ranker.probablistic import page_rank, generate_transfer_matrix
 
 def system_detect(injection_time, system_kpis, args):
     anomaly_system_kpis = {}
@@ -80,9 +81,11 @@ def load_data(args):
 
 def main_worker(args):
     # init
+    assert args.exp_name is not None
     system_kpis, injection_times, service_mrt_data = load_data(args)
 
     # worker
+    whole_result = []
     for injection_time in injection_times:
 
         print('{1} {0} Start {1}'.format(injection_time, '-'*20))
@@ -118,6 +121,7 @@ def main_worker(args):
         print('{0} Causal graph learning Start {0}'.format('-'*10))
         row_count = sum(1 for row in data)
         corr = pearson_corr(data.values)
+        print(corr)
         cg = pc(
             suffStat={"C": corr, "n": data.values.shape[0]},
             alpha=0.05,
@@ -126,14 +130,27 @@ def main_worker(args):
             verbose=True
         )
         print('{0} Causal graph learning End   {0}'.format('-'*10))
-        return
 
         # 2. ranking
-        # TODO, to construct transition matrix
-        P = []
-        output_vec = page_rank(P, args.pr_alpha, args.pr_eps, init=-1)  
-        print(output_vec)   
+        P = generate_transfer_matrix(cg, corr)
+        print(P)
+        output_vec = page_rank(P, args.pr_alpha, args.pr_eps, init=-1)
+        causal_proba = output_vec[args.pc_service_candidate:] / (output_vec[args.pc_service_candidate:]).sum()
+        degree_proba = np.zeros_like(causal_proba)
+        for kpi_id in query_list[args.pc_service_candidate:]:
+            degree_proba = anomaly_system_kpis[kpi_id]
+        degree_proba = degree_proba / degree_proba.sum()
+        
+        rank_id = query_list[args.pc_service_candidate:]
+        rank_score = args.rank_gamma * causal_proba + (1 - args.rank_gamma) * degree_proba
+        # print(rank_id, rank_score)
+        result = gen_json_result(injection_time, rank_id, rank_score)
+        whole_result.append(result)
 
+    print(whole_result)
+    with open(args.exp_name + '.json', 'w+') as f:
+        json_str = json.dumps(whole_result)
+        f.write(json_str)
 
 if __name__ == "__main__":
     args = parse_args()
